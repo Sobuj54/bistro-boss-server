@@ -139,7 +139,9 @@ async function run() {
       }
 
       if (email !== req.decoded.email) {
-        res.status(403).send({ error: true, message: "forbidden access" });
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden access" });
       }
 
       const query = { email: email };
