@@ -20,13 +20,12 @@ const verifyJWT = (req, res, next) => {
   }
 
   const token = authorization.split(" ")[1];
-  console.log(token);
   jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
     if (err) {
       return res.status(401).send({ error: true, message: "unauthorized" });
     }
     req.decoded = decoded;
-    console.log(req.decoded);
+    console.log(req.decoded.email);
     next();
   });
 };
@@ -121,6 +120,12 @@ async function run() {
     // menu related api
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
+      const newItem = req.body;
+      const result = await menuCollection.insertOne(newItem);
       res.send(result);
     });
 
