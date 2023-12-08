@@ -25,7 +25,6 @@ const verifyJWT = (req, res, next) => {
       return res.status(401).send({ error: true, message: "unauthorized" });
     }
     req.decoded = decoded;
-    console.log(req.decoded.email);
     next();
   });
 };
@@ -126,6 +125,13 @@ async function run() {
     app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
       const newItem = req.body;
       const result = await menuCollection.insertOne(newItem);
+      res.send(result);
+    });
+
+    app.delete("/menu/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: id };
+      const result = await menuCollection.deleteOne(query);
       res.send(result);
     });
 
