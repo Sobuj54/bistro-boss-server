@@ -101,6 +101,14 @@ async function run() {
       res.send({ insertResult, deleteResult });
     });
 
+    // get transaction details
+    app.get("/payments/transactions", verifyJWT, async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // users related api
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
