@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.SECRET_KEY);
 const port = process.env.PORT || 5000;
@@ -10,6 +11,35 @@ const app = express();
 // middleware
 app.use(cors());
 app.use(express.json());
+
+let transporter = nodemailer.createTransport({
+  host: "smtp.sendgrid.net",
+  port: 587,
+  auth: {
+    user: "apikey",
+    pass: process.env.SENDGRID_API_KEY,
+  },
+});
+
+// send payment confirmation email
+const sendConfirmationEmail = (payment) => {
+  transporter.sendMail(
+    {
+      from: "student1@gmail.com", // verified sender email
+      to: payment.email, // recipient email
+      subject: "Your order is confirmed", // Subject line
+      text: "Hello world!", // plain text body
+      html: "<b>Hello world!</b>", // html body
+    },
+    function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    }
+  );
+};
 
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
@@ -98,6 +128,10 @@ async function run() {
         _id: { $in: paymentDetails.cartItems.map((id) => new ObjectId(id)) },
       };
       const deleteResult = await cartCollection.deleteMany(query);
+
+      //send an email confirming payment.
+      sendConfirmationEmail(paymentDetails);
+
       res.send({ insertResult, deleteResult });
     });
 
